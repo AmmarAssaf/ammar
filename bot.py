@@ -2,7 +2,6 @@ from telegram.ext import Application, CommandHandler
 import os
 import logging
 
-# إعداد التسجيل
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -16,19 +15,19 @@ if not TOKEN:
     raise ValueError("No token provided")
 
 async def start(update, context):
-    await update.message.reply_text('✅ البوت يعمل بنجاح!')
+    await update.message.reply_text('🎉 البوت يعمل بنجاح! أخيراً!')
 
 async def help(update, context):
-    await update.message.reply_text('❓ المساعدة: /start, /help')
+    await update.message.reply_text('❓ الأوامر: /start, /help')
 
 def main():
-    # النمط الحديث - لا يوجد أي Updater هنا
     application = Application.builder().token(TOKEN).build()
     
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help))
     
     logger.info("🚀 Starting bot...")
+    print("✅ البوت شغال!")
     application.run_polling()
 
 if __name__ == '__main__':
