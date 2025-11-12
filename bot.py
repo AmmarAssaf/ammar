@@ -1,53 +1,51 @@
 from flask import Flask
-from threading import Thread
 import os
 import logging
 from telegram.ext import Application, CommandHandler
-import asyncio
+import threading
 
 app = Flask(__name__)
 
-# إعداد البوت
-def run_bot():
-    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+# المتغيرات العالمية
+bot_application = None
+
+def init_bot():
+    """تهيئة البوت في خيط منفصل"""
+    global bot_application
     
+    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     if not TOKEN:
-        logging.error("❌ TELEGRAM_BOT_TOKEN غير موجود")
+        print("❌ TELEGRAM_BOT_TOKEN غير موجود")
         return
     
     try:
-        # النمط الحديث مع python-telegram-bot 21.0
-        application = Application.builder().token(TOKEN).build()
+        bot_application = Application.builder().token(TOKEN).build()
         
         async def start(update, context):
-            user = update.effective_user
-            await update.message.reply_html(f"مرحباً {user.mention_html()}! ✅ البوت يعمل!")
+            await update.message.reply_text("✅ البوت يعمل بنجاح!")
         
-        async def help_command(update, context):
-            await update.message.reply_text("🔍 الأوامر: /start, /help")
+        async def help_cmd(update, context):
+            await update.message.reply_text("الأوامر: /start, /help")
         
-        application.add_handler(CommandHandler("start", start))
-        application.add_handler(CommandHandler("help", help_command))
+        bot_application.add_handler(CommandHandler("start", start))
+        bot_application.add_handler(CommandHandler("help", help_cmd))
         
-        print("🤖 بدء تشغيل البوت...")
-        
-        # تشغيل البوت
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        application.run_polling()
+        print("🚀 بدء تشغيل البوت...")
+        bot_application.run_polling()
         
     except Exception as e:
-        print(f"❌ خطأ في البوت: {e}")
+        print(f"❌ خطأ: {e}")
 
-# تشغيل البوت في thread منفصل
-@app.before_first_request
-def start_bot():
-    bot_thread = Thread(target=run_bot, daemon=True)
+# بدء البوت عند التحميل
+if os.getenv('TELEGRAM_BOT_TOKEN'):
+    bot_thread = threading.Thread(target=init_bot, daemon=True)
     bot_thread.start()
+else:
+    print("⚠️  TELEGRAM_BOT_TOKEN غير معين - البوت لن يعمل")
 
 @app.route('/')
 def home():
-    return "🤖 البوت يعمل بنجاح!"
+    return "🤖 خادم البوت يعمل"
 
 @app.route('/ping')
 def ping():
